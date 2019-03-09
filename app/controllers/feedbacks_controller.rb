@@ -2,8 +2,9 @@ class FeedbacksController < ApplicationController
 	before_action :set_company_token
 
 	def index
-		json = Rails.cache.fetch("feedbacks_#{@company_token}") do
-			@company_token.present? ? Feedback.where(company_token: @company_token).includes(:states).to_json(include: :states) : Feedback.includes(:states).to_json(include: :states)
+		feedbacks = @company_token.present? ? Feedback.where(company_token: @company_token).includes(:states) : Feedback.includes(:states)
+		json = Rails.cache.fetch(Feedback.cache_key(feedbacks)) do
+			feedbacks.to_json(include: :states)
 		end
 		render json: json, status: :ok
 	end
@@ -13,11 +14,15 @@ class FeedbacksController < ApplicationController
 	end
 
 	def create
-
-		CreateWorker.perform_async(@company_token, feedback_params)
-		number = Rails.cache.fetch("number_#{@company_token}") + 1
-		render json: {number: number}, status: :created	
-
+		@feedback = Feedback.create(feedback_params)
+		@feedback.company_token = @company_token
+		number = Rails.cache.fetch(feedbacks) do
+			last_feedback = feedbacks.first
+			last_number = last_feedback.present? ? last_feedback.number : 0
+		end
+		@feedback.number = number + 1
+		CreateWorker.perform_async(@feedback)
+		render json: {number: @feedback.number}, status: :created	
 	end
 
 	def count
