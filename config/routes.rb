@@ -6,6 +6,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :feedbacks do
         resources :states
+        member do
+          get 'count', param: :company_token
+        end
       end
       resources :states
     end
