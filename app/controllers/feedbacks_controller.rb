@@ -2,26 +2,22 @@ class FeedbacksController < ApplicationController
 	before_action :set_company_token
 
 	def index
-		render json: Feedback.all, status: :ok
+		json = Rails.cache.fetch("feedbacks_#{@company_token}") do
+			@company_token.present? ? Feedback.where(company_token: @company_token).includes(:states).to_json(include: :states) : Feedback.includes(:states).to_json(include: :states)
+		end
+		render json: json, status: :ok
 	end
 
 	def show
-		render json: Feedback.where(number: params[:id], company_token: @company_token), status: :ok
+		render json: @company_token.present? ? Feedback.where(number: params[:id], company_token: @company_token).includes(:state) : Feedback.find(params[:id]).includes(:state), status: :ok
 	end
 
 	def create
-		@feedback = Feedback.new(feedback_params)
-		@feedback.company_token = @company_token
-		@feedback.number = Feedback.generate_number(@company_token)
-		@state = State.new(state_params)
 
-		if @feedback.save!
-			@feedback.state = @state
-			render json: @state.errors, status: :unprocessable_entity unless @state.save!
-			render json: {number: @feedback.number}, status: :created	
-		else
-			render json: @feedback.errors, status: :unprocessable_entity
-		end
+		CreateWorker.perform_async(@company_token, feedback_params)
+		number = Rails.cache.fetch("number_#{@company_token}") + 1
+		render json: {number: number}, status: :created	
+
 	end
 
 	def count
@@ -38,7 +34,4 @@ class FeedbacksController < ApplicationController
 			params.require(:feedback).permit(:priority)
 		end
 
-		def state_params
-			params.require(:state).permit(:device, :os, :memory, :storage)
-		end
 end
