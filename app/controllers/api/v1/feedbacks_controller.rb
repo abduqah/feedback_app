@@ -1,10 +1,10 @@
-class FeedbacksController < ApplicationController
+class Api::V1::FeedbacksController < ApplicationController
 	before_action :set_company_token
 
 	def index
-		feedbacks = @company_token.present? ? Feedback.where(company_token: @company_token).includes(:states) : Feedback.includes(:states)
+		feedbacks = Feedback.includes(:states)
 		json = Rails.cache.fetch(Feedback.cache_key(feedbacks)) do
-			feedbacks.to_json(include: :states)
+			feedbacks.where(company_token: @company_token).to_json(include: :states)
 		end
 		render json: json, status: :ok
 	end
@@ -16,7 +16,7 @@ class FeedbacksController < ApplicationController
 	def create
 		@feedback = Feedback.create(feedback_params)
 		@feedback.company_token = @company_token
-		number = Rails.cache.fetch(feedbacks) do
+		number = Rails.cache.fetch(@company_token) do
 			last_feedback = feedbacks.first
 			last_number = last_feedback.present? ? last_feedback.number : 0
 		end

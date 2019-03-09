@@ -15,7 +15,7 @@ class Feedback < ApplicationRecord
 	validates_inclusion_of :priority, in: %w(minor major critical), message: 'priority must be in ( 1, 2, 3 ) for minor, major or critical respectively'
 	
 	# callbacks
-	after_save :create_json_cache
+	after_save :create_feedbacks_cache, :create_feedbacks_number_cache
 
 	def generate_number
 		# this implementation is trivial for no recored shall be deleted
@@ -27,15 +27,18 @@ class Feedback < ApplicationRecord
 
 	def self.cache_key(feedbacks)
 		{
-			serializer: "feedbacks_#{@company_token}",
+			serializer: 'feedbacks',
 			stat_record: feedbacks.maximum(:updated_at)
 		}
 	end
 
 	private
 
-		def create_json_cache
-			CreateFeedbacksJsonWorker.perform_async()
+		def create_feedbacks_number_cache
+			CreateFeedbacksNumberWorker.perform_async(@company_token)
 		end
 
+		def create_feedbacks_cache
+			CreateFeedbacksJsonWorker.perform_async(@company_token)
+		end
 end
