@@ -2,34 +2,36 @@ class FeedbacksController < ApplicationController
 	before_action :set_company_token
 
 	def index
-		Feedback.all
+		render json: Feedback.all, status: :ok
 	end
 
 	def show
-		Feedback.where(number: params[:id], company_token: company_token)
+		render json: Feedback.where(number: params[:id], company_token: @company_token), status: :ok
 	end
 
 	def create
-		@feedback = Feedback.new(feedback_params, company_token: company_token)
+		@feedback = Feedback.new(feedback_params)
+		@feedback.company_token = @company_token
+		@feedback.number = Feedback.generate_number(@company_token)
 		@state = State.new(state_params)
-		@feedback.state = @state
 
-		rv = (@feedback.save! && @state.save!)
-
-		if rv
+		if @feedback.save!
+			@feedback.state = @state
+			render json: @state.errors, status: :unprocessable_entity unless @state.save!
 			render json: {number: @feedback.number}, status: :created	
 		else
-			render json: @feedback.errors? ? @feedback.errors : @state.errors, status: :unprocessable_entity
+			render json: @feedback.errors, status: :unprocessable_entity
 		end
 	end
 
 	def count
+		
 	end
 
 	private
 
 		def set_company_token
-			company_token = params[:company_token]
+			@company_token = params[:company_token]
 		end
 
 		def feedback_params
