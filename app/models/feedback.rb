@@ -6,7 +6,7 @@ class Feedback < ApplicationRecord
 
 	# Relations
 	has_one :state, dependent: :destroy
-	accepts_nested_attributes_for :state
+	accepts_nested_attributes_for :state, reject_if: :reject_state
 
 	# Validations
 	validates_presence_of :company_token, :priority, :number
@@ -15,6 +15,9 @@ class Feedback < ApplicationRecord
 
 	# Callbacks
 	after_commit :set_company_number
+
+	# searchkick
+	searchkick searchable: [:company_token, :number]
 
 	def set_company_number
 		FeedbackNumberCacheWorker.perform_async(company_token)

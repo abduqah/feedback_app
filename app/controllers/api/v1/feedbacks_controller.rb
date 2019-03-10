@@ -6,12 +6,13 @@ class Api::V1::FeedbacksController < ApplicationController
 	before_action :set_company_token, :set_redis, :set_company_number
 
 	def index
-		feedbacks = @company_token.present? ? Feedback.where(company_token: @company_token).includes(:state).to_json(include: :state) : Feedback.includes(:state).to_json(include: :state)
+		Feedback.reindex
+		feedbacks = @company_token.present? ? Feedback.search(@company_token).includes(:state).to_json(include: :state) : Feedback.includes(:state).to_json(include: :state)
 		render json: feedbacks, status: :ok
 	end
 
 	def show
-		render json: @company_token.present? ? Feedback.where(number: params[:id], company_token: @company_token).includes(:state) : Feedback.find(params[:id]).includes(:state), status: :ok
+		render json: @company_token.present? ? Feedback.search("#{@company_token} #{params[:id]}").includes(:state) : Feedback.find(params[:id]).includes(:state), status: :ok
 	end
 
 	def create
