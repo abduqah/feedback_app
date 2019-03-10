@@ -1,9 +1,9 @@
 class Api::V1::FeedbacksController < ApplicationController
-	#redis
+	# Redis
 	require "redis"
 	
-	
-	before_action :set_company_token, :set_company_number
+	# Callbacks
+	before_action :set_company_token, :set_redis, :set_company_number
 
 	def index
 		feedbacks = @company_token.present? ? Feedback.where(company_token: @company_token).includes(:state).to_json(include: :state) : Feedback.includes(:state).to_json(include: :state)
@@ -15,15 +15,25 @@ class Api::V1::FeedbacksController < ApplicationController
 	end
 
 	def create
-		redis = Redis.new
-		number = redis.incr(@company_token)
-		CreateWorker.perform_async(feedback_params, number)
-		render json: {number: number}, status: :created	
+		number = @redis.incr(@company_token)
+		feedback = Feedback.new(feedback_params)
+		feedback.number = number
+		feedback.company_token = @company_token
+		if feedback.valid?
+			CreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
+			render json: {number: number}, status: :created
+		else
+			render json: feedback.errors, status: :unprocessable_entity
+		end
 	end
 
 	def count
-		redis = Redis.new
-		count = redis.get(@company_token)
+		count = @redis.get(@company_token)
+		if count
+			render json: { company: @company_token, feedbacks_number: count}, status: :ok
+		else
+			head :no_content
+		end
 	end
 
 	private
@@ -36,8 +46,11 @@ class Api::V1::FeedbacksController < ApplicationController
 			params.require(:feedback).permit(:priority, state_attributes: [:device, :os, :memory, :storage])
 		end
 
+		def set_redis
+			@redis = Redis.new
+		end
+
 		def set_company_number
-			redis = Redis.new
-			redis.exists(@company_token) == 1 ? redis.get(@company_token) : redis.set(@company_token, Feedback.where(company_token: @company_token).size)
+			FeedbackNumberCacheWorker.perform_async(@company_token)
 		end
 end

@@ -13,11 +13,10 @@ class Feedback < ApplicationRecord
 	validates_uniqueness_of :number, scope: :company_token
 	validates_inclusion_of :priority, in: %w(minor major critical), message: 'priority must be in ( 1, 2, 3 ) for minor, major or critical respectively'
 
-	def generate_number
-		# this implementation is trivial for no recored shall be deleted
-		# numbers start from 1
-		last_feedback = Feedback.where(company_token: company_token).first
-		last_number = last_feedback.present? ? last_feedback.number : 0
-		number = last_number + 1
+	# Callbacks
+	after_commit :set_company_number
+
+	def set_company_number
+		FeedbackNumberCacheWorker.perform_async(company_token)
 	end
 end
