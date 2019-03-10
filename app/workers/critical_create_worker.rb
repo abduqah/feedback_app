@@ -1,5 +1,6 @@
-class CreateWorker
+class CriticalCreateWorker
 	include Sidekiq::Worker
+	sidekiq_options queue: 'critical'
 
 	def perform(feedback_attributes, state_attributes)
 		ActiveRecord::Base.transaction do

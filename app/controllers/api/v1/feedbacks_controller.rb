@@ -12,7 +12,7 @@ class Api::V1::FeedbacksController < ApplicationController
 
 	def show
 		search = Feedback.search(@company_token || "*")
-		result = get_feedback(search, params[:id])
+		result = get_feedback(search, params[:number])
 		render json: result, status: :ok
 	end
 
@@ -22,7 +22,14 @@ class Api::V1::FeedbacksController < ApplicationController
 		feedback.number = number
 		feedback.company_token = @company_token
 		if feedback.valid?
-			CreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
+			case feedback_params.priority
+			when 1
+				LowCreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
+			when 2
+				CreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
+			when 3
+				CriticalCreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
+			end
 			render json: {number: number}, status: :created
 		else
 			render json: feedback.errors, status: :unprocessable_entity

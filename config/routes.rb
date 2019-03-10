@@ -4,7 +4,7 @@ Rails.application.routes.draw do
 	mount Sidekiq::Web => '/sidekiq'
 	namespace :api, defaults: {format: :json}  do
 		namespace :v1 do
-			resources :feedbacks do
+			resources :feedbacks, param: :number do
 				collection do
 					get 'count'
 				end

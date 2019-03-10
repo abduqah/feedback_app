@@ -7,6 +7,6 @@ class FeedbackNumberCacheWorker
 
 	def perform(company_token)
 		redis = Redis.new
-		redis.exists(company_token) == 1 ? redis.get(company_token) : redis.set(company_token, Feedback.where(company_token: company_token).size)
+		redis.set(company_token, Feedback.search(company_token).size)
 	end
 end

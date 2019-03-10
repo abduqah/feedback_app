@@ -1,7 +1,6 @@
 class Feedback < ApplicationRecord
 
 	# Default values
-	default_scope { order(created_at: :desc) }
 	enum priority: { minor: 1, major: 2, critical: 3 }
 
 	# Relations
@@ -17,6 +16,7 @@ class Feedback < ApplicationRecord
 	after_commit :set_company_number
 
 	# searchkick
+	searchkick callbacks: :async
 	searchkick searchable: [:company_token]
 
 	def set_company_number
