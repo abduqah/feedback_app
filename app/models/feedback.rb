@@ -17,9 +17,13 @@ class Feedback < ApplicationRecord
 	after_commit :set_company_number
 
 	# searchkick
-	searchkick searchable: [:company_token, :number]
+	searchkick searchable: [:company_token]
 
 	def set_company_number
 		FeedbackNumberCacheWorker.perform_async(company_token)
 	end
+
+	def reject_state(attributes)
+    attributes['device'].blank? || attributes['os'].blank?
+  end
 end

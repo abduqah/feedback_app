@@ -5,14 +5,15 @@ class Api::V1::FeedbacksController < ApplicationController
 	# Callbacks
 	before_action :set_company_token, :set_redis, :set_company_number
 
-	def index
-		Feedback.reindex
-		feedbacks = @company_token.present? ? Feedback.search(@company_token).includes(:state).to_json(include: :state) : Feedback.includes(:state).to_json(include: :state)
+	def index  
+		feedbacks = Feedback.search(@company_token || "*")
 		render json: feedbacks, status: :ok
 	end
 
 	def show
-		render json: @company_token.present? ? Feedback.search("#{@company_token} #{params[:id]}").includes(:state) : Feedback.find(params[:id]).includes(:state), status: :ok
+		search = Feedback.search(@company_token || "*")
+		result = get_feedback(search, params[:id])
+		render json: result, status: :ok
 	end
 
 	def create
@@ -53,5 +54,9 @@ class Api::V1::FeedbacksController < ApplicationController
 
 		def set_company_number
 			FeedbackNumberCacheWorker.perform_async(@company_token)
+		end
+
+		def get_feedback(search_array, number)
+			binding.pry
 		end
 end
