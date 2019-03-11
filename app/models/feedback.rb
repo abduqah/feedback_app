@@ -16,8 +16,7 @@ class Feedback < ApplicationRecord
 	after_commit :set_company_number
 
 	# searchkick
-	searchkick callbacks: :async
-	searchkick searchable: [:company_token]
+	searchkick searchable: [:company_token]#, callbacks: :asyncs
 
 	def set_company_number
 		FeedbackNumberCacheWorker.perform_async(company_token)
@@ -25,5 +24,13 @@ class Feedback < ApplicationRecord
 
 	def reject_state(attributes)
     attributes['device'].blank? || attributes['os'].blank?
-  end
+	end
+	
+	def self.get_feedback(search, number)
+		result = []
+		search.each do |feedback|
+			result << feedback if feedback[:number] == number
+		end
+		result
+	end
 end

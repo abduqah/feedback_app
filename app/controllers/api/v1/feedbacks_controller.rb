@@ -6,14 +6,22 @@ class Api::V1::FeedbacksController < ApplicationController
 	before_action :set_company_token, :set_redis, :set_company_number
 
 	def index  
-		feedbacks = Feedback.search(@company_token || "*")
-		render json: feedbacks, status: :ok
+		feedbacks = Feedback.search(@company_token || "*",	fields: [{company_token: :exact}])
+		if feedbacks.size > 0
+			render json: feedbacks, status: :ok
+		else
+			head :no_content
+		end
 	end
 
 	def show
 		search = Feedback.search(@company_token || "*")
-		result = get_feedback(search, params[:number])
-		render json: result, status: :ok
+		result = Feedback.get_feedback(search, params[:number].to_i)
+		if result.size > 0
+			render json: result, status: :ok
+		else
+			head :no_content
+		end
 	end
 
 	def create
@@ -22,7 +30,7 @@ class Api::V1::FeedbacksController < ApplicationController
 		feedback.number = number
 		feedback.company_token = @company_token
 		if feedback.valid?
-			case feedback_params.priority
+			case feedback_params[:priority]
 			when 1
 				LowCreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
 			when 2
@@ -63,7 +71,4 @@ class Api::V1::FeedbacksController < ApplicationController
 			FeedbackNumberCacheWorker.perform_async(@company_token)
 		end
 
-		def get_feedback(search_array, number)
-			binding.pry
-		end
 end
