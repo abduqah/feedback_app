@@ -38,7 +38,7 @@ class Api::V1::FeedbacksController < ApplicationController
 			when 3
 				CriticalCreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
 			end
-			render json: {number: number}, status: :created
+			render json: { number: number }, status: :created
 		else
 			render json: feedback.errors, status: :unprocessable_entity
 		end
