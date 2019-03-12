@@ -23,7 +23,7 @@ class Feedback < ApplicationRecord
 	end
 
 	def reject_state(attributes)
-    attributes['device'].blank? || attributes['os'].blank?
+		attributes['device'].blank? || attributes['os'].blank?
 	end
 	
 	def self.get_feedback(search, number)
