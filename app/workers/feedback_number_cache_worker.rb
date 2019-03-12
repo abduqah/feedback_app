@@ -7,6 +7,6 @@ class FeedbackNumberCacheWorker
 	def perform(company_token)
 		redis = Redis.new
 		Feedback.reindex
-		redis.set(company_token, Feedback.search(company_token || '*',	fields: [{company_token: :exact}]).size)
+		redis.set(company_token || 'all_companies', Feedback.search(company_token || '*',	fields: [{company_token: :exact}]).size) if company_token
 	end
 end
