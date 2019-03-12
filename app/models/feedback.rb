@@ -18,6 +18,12 @@ class Feedback < ApplicationRecord
 	# searchkick
 	searchkick searchable: [:company_token]#, callbacks: :asyncs
 
+	scope :search_import, -> { includes(:state) }
+
+  def search_data
+    { company_token: company_token }
+	end
+
 	def set_company_number
 		FeedbackNumberCacheWorker.perform_async(company_token)
 	end
