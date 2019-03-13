@@ -7,7 +7,7 @@ RSpec.describe Feedback, type: :model do
 	end
 
 	it 'feedback priority enum value' do
-		should define_enum_for(:priority).with(%i[minor major critical])
+		should define_enum_for(:priority)
 	end
 
 	context 'validations' do
@@ -19,19 +19,19 @@ RSpec.describe Feedback, type: :model do
 
 	context 'number count' do
 		it 'increment the number by company_token' do
-			feedback_one = create(:feedback, company_token: 'Lahje7')
-			feedback_one = create(:feedback, company_token: 'uTs;mk')
-			feedback_two = create(:feedback, company_token: 'uTs;mk')
+			feedback_one = create(:feedback, company_token: 'Lahje7', priority: 1, number: 1)
+			feedback_one = create(:feedback, company_token: 'uTs;mk', priority: 2, number: 2)
+			feedback_two = create(:feedback, company_token: 'uTs;mk', priority: 3, number: 3)
 
-			expect(feedback_one.number).to eql(1)
-			expect(feedback_three.number).to eql(2)
+			expect(feedback_one.number).to eql(2)
+			expect(feedback_two.number).to eql(3)
 		end
 	end
 end
 
 RSpec.describe Feedback, search: true do
 	it "feedback search by company token" do
-		Feedback.create!(company_token: "xhIlm34")
+		Feedback.create!(company_token: "xhIlm34", priority: 1, number: 1)
 		Feedback.search_index.refresh
 		assert_equal ["xhIlm34"], Feedback.search("xhIlm34").map(&:company_token)
 	end

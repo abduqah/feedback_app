@@ -6,7 +6,7 @@ class Api::V1::FeedbacksController < ApplicationController
 	before_action :set_company_token, :set_redis
 
 	def index
-		feedbacks = Feedback.search(@company_token || "*",	fields: [{company_token: :exact}], page: params[:page], per_page: 25)
+		feedbacks = Feedback.search(@company_token || "*", fields: [{company_token: :exact}], page: params[:page], per_page: 25)
 		if feedbacks.size > 0
 			render json: feedbacks, meta: pagination_dict(feedbacks), status: :ok
 		else

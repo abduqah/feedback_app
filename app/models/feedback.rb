@@ -5,7 +5,7 @@ class Feedback < ApplicationRecord
 
 	# Relations
 	has_one :state, dependent: :destroy
-	accepts_nested_attributes_for :state, reject_if: :reject_state, message: ': Devise and OS are mandatory'
+	accepts_nested_attributes_for :state, reject_if: :reject_state
 
 	# Validations
 	validates_presence_of :company_token, :priority, :number

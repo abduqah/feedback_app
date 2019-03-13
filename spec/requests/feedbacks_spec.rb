@@ -2,60 +2,53 @@ require 'rails_helper'
 
 RSpec.describe 'feedbacks api', type: :request do
 
-  let(:company_token) { SecureRandom.hex(9) }
-  let!(:feedbacks) do
-    (1..11).inject([]) do |memo|
-      memo << FactoryBot.create(:feedback, company_token: company_token, priority: priority)
-    end
-  end
-  let(:id) { feedbacks.first.id }
-  let(:number) { feedbacks.first.number }
-  let(:company_token) { feedbacks.first.company_token }
-  let!(:feedback) { FactoryBot.create(:feedback) }
+	let(:company_token) { SecureRandom.hex(9) }
+	let!(:feedbacks) do
+		(1..11).inject([]) do |memo, i|
+			memo << FactoryBot.create(:feedback, number: i, company_token: company_token, priority: 1)
+		end
+	end
+	let(:feedback_id) { feedbacks.first.id }
+	let(:feedback_number) { feedbacks.first.number }
+	let(:feedback_company_token) { feedbacks.first.company_token }
+	let!(:feedback) { FactoryBot.create(:feedback) }
 
-  describe 'GET /api/v1/feedbacks/:number' do
-    before { get "/api/v1/feedbacks/#{number}?company_token=#{company_token}" }
+	describe 'GET /api/v1/feedbacks/:number' do
+		before { get "/api/v1/feedbacks/#{1}?company_token=#{feedback_company_token}" }
 
-    context 'record exists' do
-      it 'return feedback' do
-        expect(json).not_to be_empty
-        expect(json['data']['id'].to_i).to eq(id)
-      end
+		context 'when the record exists' do
+			it 'returns the feedback' do
+				expect(response[:data][:id].to_i).to eq(feedback_id)
+			end
 
-      it 'returns status ok' do
-        expect(response).to have_http_status(200)
-      end
-    end
+			it 'returns status code ok' do
+				expect(response).to have_http_status(200)
+			end
+		end
 
-    context 'record does not exist' do
-      let(:number) { 12 }
+		context 'when the record does not exist' do
+			let(:feedback_number) { 43 }
 
-      it 'returns status no_content' do
-        expect(response).to have_http_status(204)
-      end
-    end
+			it 'returns status code no_content' do
+				expect(response).to have_http_status(204)
+			end
 
-    context 'without company_token' do
-      before { get "/api/v1/feedbacks/#{number}" }
-      it 'returns status no_content' do
-        expect(response).to have_http_status(204)
-      end
-    end
-  end
+		end
 
-  describe 'GET /api/v1/feedbacks/count' do
-    context 'response object' do
-      before { get '/api/v1/feedbacks/count', params: {company_token: feedbacks.first.company_token} }
+	end
 
-      it 'returns total number of feedbacks with the same company token' do
-        expect(Feedback.count).to eq(12)
-        expect(json).not_to be_empty
-        expect(json['count']).to eq(12)
-      end
+	describe 'GET /api/v1/feedbacks/count' do
+		context 'testing the response object' do
+			before { get '/api/v1/feedbacks/count', params: {company_token: feedbacks.first.company_token} }
 
-      it 'returns status ok' do
-        expect(response).to have_http_status(200)
-      end
-    end
-  end
+			it 'returns total number of feedbacks with the same company token' do
+				expect(Feedback.count).to eq(12)
+				expect(response['data']).to eq(11)
+			end
+
+			it 'returns status code ok' do
+				expect(response).to have_http_status(200)
+			end
+		end
+	end
 end
