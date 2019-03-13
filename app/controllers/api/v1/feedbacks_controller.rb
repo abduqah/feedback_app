@@ -3,7 +3,7 @@ class Api::V1::FeedbacksController < ApplicationController
 	require "redis"
 	
 	# Callbacks
-	before_action :set_company_token, :set_redis, :set_company_number
+	before_action :set_company_token, :set_redis
 
 	def index
 		feedbacks = Feedback.search(@company_token || "*",	fields: [{company_token: :exact}], page: params[:page], per_page: 25)
@@ -15,7 +15,7 @@ class Api::V1::FeedbacksController < ApplicationController
 	end
 
 	def show
-		search = Feedback.search(@company_token || "*")
+		search = Feedback.search(@company_token || '*')
 		result = Feedback.get_feedback(search, params[:number].to_i)
 		if result.size > 0
 			render json: result, status: :ok
@@ -30,14 +30,7 @@ class Api::V1::FeedbacksController < ApplicationController
 		feedback.number = number
 		feedback.company_token = @company_token
 		if feedback.valid?
-			case feedback_params[:priority]
-			when 1
-				LowCreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
-			when 2
-				CreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
-			when 3
-				CriticalCreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
-			end
+			CreateWorker.perform_async(feedback.attributes, feedback.state.attributes)
 			render json: { number: number }, status: :created
 		else
 			render json: feedback.errors, status: :unprocessable_entity
@@ -65,10 +58,6 @@ class Api::V1::FeedbacksController < ApplicationController
 
 		def set_redis
 			@redis = Redis.new
-		end
-
-		def set_company_number
-			FeedbackNumberCacheWorker.perform_async(@company_token)
 		end
 
 end

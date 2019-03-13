@@ -5,12 +5,12 @@ class Feedback < ApplicationRecord
 
 	# Relations
 	has_one :state, dependent: :destroy
-	accepts_nested_attributes_for :state, reject_if: :reject_state
+	accepts_nested_attributes_for :state, reject_if: :reject_state, message: ': Devise and OS are mandatory'
 
 	# Validations
 	validates_presence_of :company_token, :priority, :number
 	validates_uniqueness_of :number, scope: :company_token
-	validates_inclusion_of :priority, in: %w(minor major critical), message: 'priority must be in ( 1, 2, 3 ) for minor, major or critical respectively'
+	validates_inclusion_of :priority, in: %w(minor major critical), message: ': priority must be in ( 1, 2, 3 ) for minor, major or critical respectively'
 
 	# Callbacks
 	after_commit :set_company_number
@@ -20,8 +20,8 @@ class Feedback < ApplicationRecord
 
 	scope :search_import, -> { includes(:state) }
 
-  def search_data
-    { company_token: company_token }
+	def search_data
+		{ company_token: company_token }
 	end
 
 	def set_company_number
