@@ -8,5 +8,5 @@ RSpec.describe State, type: :model do
 	context 'validations' do
 		it { is_expected.to validate_presence_of(:device) }
 		it { is_expected.to validate_presence_of(:os) }
-end
+	end
 end
