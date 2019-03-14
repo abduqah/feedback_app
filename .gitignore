@@ -16,7 +16,7 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
-
+dump.rdb
 # Ignore uploaded files in development
 /storage/*
 !/storage/.keep
@@ -25,3 +25,4 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+.vscode/*
