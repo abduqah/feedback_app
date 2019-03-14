@@ -18,7 +18,7 @@ RSpec.describe 'feedbacks api', type: :request do
 
     context 'when the record exists' do
       it 'returns the feedback' do
-        expect(response[0][:id].to_i).to eq(feedback_id)
+        expect(response[:id].to_i).to eq(feedback_id)
       end
 
       it 'returns status code ok' do
@@ -29,8 +29,8 @@ RSpec.describe 'feedbacks api', type: :request do
     context 'when the record does not exist' do
       let(:feedback_number) { 43 }
 
-      it 'returns status code no_content' do
-        expect(response).to have_http_status(204)
+      it 'returns status code ok' do
+        expect(response).to have_http_status(200)
       end
 
     end

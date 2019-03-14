@@ -43,7 +43,7 @@ class Api::V1::FeedbacksController < ApplicationController
 	end
 
 	def count
-		count = @redis.get(@company_token)
+		count = Feedback.where(company_token: @company_token).size
 		if count
 			render json: { company: @company_token, feedbacks_number: count}, status: :ok
 		else
