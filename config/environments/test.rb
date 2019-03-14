@@ -30,6 +30,10 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system in a temporary directory
   config.active_storage.service = :test
+  config.cache_store = :redis_store
+    config.public_file_server.headers = {
+      'Cache-Control' => "public, max-age=#{2.days.to_i}"
+    }
 
   config.action_mailer.perform_caching = false
 
