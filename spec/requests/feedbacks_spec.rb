@@ -18,7 +18,7 @@ RSpec.describe 'feedbacks api', type: :request do
 
 		context 'when the record exists' do
 			it 'returns the feedback' do
-				expect(response[:data][:id].to_i).to eq(feedback_id)
+				expect(response[0][:id].to_i).to eq(feedback_id)
 			end
 
 			it 'returns status code ok' do
@@ -43,7 +43,7 @@ RSpec.describe 'feedbacks api', type: :request do
 
 			it 'returns total number of feedbacks with the same company token' do
 				expect(Feedback.count).to eq(12)
-				expect(response['data']).to eq(11)
+				expect(response[:feedbacks_number]).to eq(11)
 			end
 
 			it 'returns status code ok' do

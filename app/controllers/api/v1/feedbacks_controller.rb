@@ -6,7 +6,12 @@ class Api::V1::FeedbacksController < ApplicationController
 	before_action :set_company_token, :set_redis
 
 	def index
-		feedbacks = Feedback.search(@company_token || "*", fields: [{company_token: :exact}], page: params[:page], per_page: 25)
+		begin
+			feedbacks = Feedback.search(@company_token || "*", fields: [{company_token: :exact}], page: params[:page], per_page: 25)
+		rescue => e
+			Feedback.reindex
+			retry
+		end
 		if feedbacks.size > 0
 			render json: feedbacks, meta: pagination_dict(feedbacks), status: :ok
 		else
@@ -15,7 +20,13 @@ class Api::V1::FeedbacksController < ApplicationController
 	end
 
 	def show
-		search = Feedback.search(@company_token || '*')
+		begin
+			search = Feedback.search(@company_token || '*')
+		rescue => e
+			Feedback.reindex
+			retry
+		end
+		
 		result = Feedback.get_feedback(search, params[:number].to_i)
 		if result.size > 0
 			render json: result, status: :ok
